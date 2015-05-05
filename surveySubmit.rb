@@ -50,28 +50,52 @@ class SurveyFiller
 	end
 
 	def checkboxFill(checkboxArray)
-		Capybara.ignore_hidden_elements = false
+		
 		times = checkboxArray.length
 		timesToCheck = rand(times*2)
 		timesToCheck.times do |i|
 			@sampledID = checkboxArray.sample
 			session.execute_script("jQuery('#'+'#{@sampledID}').prop('checked',true); ")
-			sleep 3
-			# session.execute_script("jQuery('#'+#{@sampledID}).prop('checked',true);")
-			# session.check("#" + sampledID, :visible => false)
 		end
-		# Capybara.ignore_hidden_elements = true
+		
 	end
 
+	def radioIdArray
+		allRadios = session.all(:css, ".gfield_radio input", :visible => false)
+		return allRadios.map {|c| c[:id]}
+	end
+
+	def radioFill(radioArray)
+		times = radioArray.length
+		timesToCheck = rand(times/2)
+		timesToCheck.times do |i|
+			@sampledID = radioArray.sample
+			session.execute_script("jQuery('#'+'#{@sampledID}').prop('checked',true); ")
+		end
+	end
+
+
+	def surveySubmit
+		if session.first(:css, "input[type='submit']")
+			session.find(:css, "input[type='submit']").click
+		end
+	end
+
+	def inputFill
+
+	end
 
 end
 
 
 session = Capybara::Session.new :selenium
 
-surveyRobot = SurveyFiller.new(session)
+surveyBot = SurveyFiller.new(session)
 
-checkboxes = surveyRobot.goToLastPage("http://audubonsurvey.org/").checkboxIdArray
-surveyRobot.checkboxFill(checkboxes)
+checkboxes = surveyBot.goToLastPage("http://audubon-giftmaker-wpengine-com.giftmaker.staging.wpengine.com/").checkboxIdArray
+surveyBot.checkboxFill(checkboxes)
+radios = surveyBot.radioIdArray
+surveyBot.radioFill(radios)
+
 
 
