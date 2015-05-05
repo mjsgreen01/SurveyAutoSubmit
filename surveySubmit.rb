@@ -2,6 +2,7 @@ require "capybara"
 require "capybarista"
 require "JSON"
 
+Capybara.ignore_hidden_elements = true
 
 
 module WaitForAjax  # from https://robots.thoughtbot.com/automatically-wait-for-ajax-with-capybara
@@ -12,7 +13,7 @@ module WaitForAjax  # from https://robots.thoughtbot.com/automatically-wait-for-
   end
 
   def finished_all_ajax_requests?
-    page.evaluate_script('jQuery.active').zero?
+    session.evaluate_script('jQuery.active').zero?
   end
 end
 
@@ -44,4 +45,11 @@ class SurveyFiller
 end
 
 
-Capybara.ignore_hidden_elements = true
+session = Capybara::Session.new :selenium
+
+surveyRobot = SurveyFiller.new(session)
+
+checkboxes = surveyRobot.goToLastPage("http://audubonsurvey.org/").checkboxIdArray
+puts checkboxes
+
+
