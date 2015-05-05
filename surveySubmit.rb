@@ -32,13 +32,14 @@ class SurveyFiller
 
 	def goToLastPage(url)
 		session.visit url
-
 		
 		while !session.first(:css, ".gform_next_button").nil?
 			if session.first(:css, ".gform_next_button")
 				session.find(:css, '.gform_next_button').click
 				# wait_for_ajax
+				# session.execute_script("console.log(jQuery('#choice_1_27_1') )")
 			end
+
 		end
 		return self
 	end
@@ -48,8 +49,20 @@ class SurveyFiller
 		return allCheckboxes.map {|c| c[:id]}
 	end
 
-	
-	
+	def checkboxFill(checkboxArray)
+		Capybara.ignore_hidden_elements = false
+		times = checkboxArray.length
+		timesToCheck = rand(times*2)
+		timesToCheck.times do |i|
+			@sampledID = checkboxArray.sample
+			session.execute_script("jQuery('#'+'#{@sampledID}').prop('checked',true); ")
+			sleep 3
+			# session.execute_script("jQuery('#'+#{@sampledID}).prop('checked',true);")
+			# session.check("#" + sampledID, :visible => false)
+		end
+		# Capybara.ignore_hidden_elements = true
+	end
+
 
 end
 
@@ -59,6 +72,6 @@ session = Capybara::Session.new :selenium
 surveyRobot = SurveyFiller.new(session)
 
 checkboxes = surveyRobot.goToLastPage("http://audubonsurvey.org/").checkboxIdArray
-puts checkboxes
+surveyRobot.checkboxFill(checkboxes)
 
 
