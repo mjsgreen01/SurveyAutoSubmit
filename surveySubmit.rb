@@ -7,6 +7,12 @@ Capybara.configure do |config|
   config.default_wait_time = 4
 end
 
+if ARGV.size < 2
+	puts "Program aborted - add as command-line arguments, a URL and number of times to test the survey"
+	exit
+end
+surveyUrl = ARGV[0]
+numberTests = ARGV[1].to_i
 
 
 class SurveyFiller
@@ -21,10 +27,13 @@ class SurveyFiller
 		session.visit url
 		begin
 			while !session.first(:css, ".gform_next_button").nil?
-				if session.first(:css, ".gform_next_button")
-					session.find(:css, '.gform_next_button').click
+				begin
+					if session.first(:css, ".gform_next_button")
+						session.find(:css, '.gform_next_button').click
+					end
+				rescue
+					puts "goToLastPage method error - most likely nothing to worry about"
 				end
-
 			end
 		rescue
 			puts "goToLastPage method error - most likely nothing to worry about"
@@ -38,7 +47,6 @@ class SurveyFiller
 	end
 
 	def checkboxFill(checkboxArray)
-		
 		times = checkboxArray.length
 		timesToCheck = rand(times*2)
 		timesToCheck.times do |i|
@@ -71,7 +79,7 @@ class SurveyFiller
 	end
 
 	def inputFill
-		allInputs = session.all(:css, 'input[type="text"], textarea, select', :visible => false)
+		allInputs = session.all(:css, 'input[type="text"], textarea', :visible => false)
 		inputIdArray = allInputs.map {|c| c[:id]}
 		times = inputIdArray.length
 		timesToFill = rand(times*2)
@@ -91,9 +99,14 @@ class SurveyFiller
 		}
 		# fill in email address
 		@randomString = (0...8).map { (65 + rand(26)).chr }.join
-		session.execute_script("var emailLabel = jQuery('.gfield_contains_required label').filter(function(){return jQuery(this).text() == 'Email*'});
+		session.execute_script("var emailLabel = jQuery('.gfield_contains_required label').filter(function(){return jQuery(this).text().toLowerCase().indexOf('email') >= 0});
 								emailid = emailLabel.parent().attr('id');
 								jQuery('#'+emailid+' input').val('#{@randomString}'+'@MSsurveyBot.com').attr('value', '#{@randomString}'+'@MSsurveyBot.com'); ")
+		# fill in zip code
+		@randomString = (0...5).map { (48 + rand(9)).chr }.join
+		session.execute_script("var zipLabel = jQuery('label').filter(function(){return jQuery(this).text().toLowerCase().indexOf('zip') >= 0});
+								zipid = zipLabel.parent().attr('id');
+								jQuery('#'+zipid+' input').val('#{@randomString}').attr('value', '#{@randomString}'); ")
 	end
 
 end
@@ -103,17 +116,18 @@ session = Capybara::Session.new :selenium
 
 surveyBot = SurveyFiller.new(session)
 
-# go to the last page and fill in random checkboxes
-checkboxes = surveyBot.goToLastPage("http://audubon-giftmaker-wpengine-com.giftmaker.staging.wpengine.com/").checkboxIdArray
-surveyBot.checkboxFill(checkboxes)
-# fill in random radio buttons
-radios = surveyBot.radioIdArray
-surveyBot.radioFill(radios)
-# fill in random input fields
-surveyBot.inputFill
-# fill in all required input fields
-surveyBot.requiredInputFill
-surveyBot.surveySubmit
-
+numberTests.times do
+	# go to the last page and fill in random checkboxes
+	checkboxes = surveyBot.goToLastPage(surveyUrl).checkboxIdArray
+	surveyBot.checkboxFill(checkboxes)
+	# fill in random radio buttons
+	radios = surveyBot.radioIdArray
+	surveyBot.radioFill(radios)
+	# fill in random input fields
+	surveyBot.inputFill
+	# fill in all required input fields
+	surveyBot.requiredInputFill
+	surveyBot.surveySubmit
+end
 
 
