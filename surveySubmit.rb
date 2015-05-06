@@ -32,14 +32,17 @@ class SurveyFiller
 
 	def goToLastPage(url)
 		session.visit url
-		
-		while !session.first(:css, ".gform_next_button").nil?
-			if session.first(:css, ".gform_next_button")
-				session.find(:css, '.gform_next_button').click
-				# wait_for_ajax
-				# session.execute_script("console.log(jQuery('#choice_1_27_1') )")
-			end
+		begin
+			while !session.first(:css, ".gform_next_button").nil?
+				if session.first(:css, ".gform_next_button")
+					session.find(:css, '.gform_next_button').click
+					# wait_for_ajax
+					# session.execute_script("console.log(jQuery('#choice_1_27_1') )")
+				end
 
+			end
+		rescue
+			puts "goToLastPage method error - most likely nothing to worry about"
 		end
 		return self
 	end
@@ -78,11 +81,28 @@ class SurveyFiller
 	def surveySubmit
 		if session.first(:css, "input[type='submit']")
 			session.find(:css, "input[type='submit']").click
+			sleep 3
 		end
 	end
 
 	def inputFill
+		allInputs = session.all(:css, 'input[type="text"]', :visible => false)
+		inputIdArray = allInputs.map {|c| c[:id]}
 
+	end
+	def requiredInputFill
+		requiredInputs = session.all(:css, '.gfield_contains_required input', :visible => false)
+		inputIdArray = requiredInputs.map {|c| c[:id]}
+		inputIdArray.each{|i|
+			@sampledID = i
+			@randomString = (0...8).map { (65 + rand(26)).chr }.join
+			session.execute_script("jQuery('#'+'#{@sampledID}').val('#{@randomString}'); jQuery('#'+'#{@sampledID}').attr('value', '#{@randomString}'); ")
+		}
+		@randomString = (0...8).map { (65 + rand(26)).chr }.join
+
+		session.execute_script("var emailLabel = jQuery('.gfield_contains_required label').filter(function(){return jQuery(this).text() == 'Email*'});
+								emailid = emailLabel.parent().attr('id');
+								jQuery('#'+emailid+' input').val('#{@randomString}'+'@gmail.com'); jQuery('#'+emailid+' input').attr('value', '#{@randomString}'+'@gmail.com'); ")
 	end
 
 end
@@ -96,6 +116,8 @@ checkboxes = surveyBot.goToLastPage("http://audubon-giftmaker-wpengine-com.giftm
 surveyBot.checkboxFill(checkboxes)
 radios = surveyBot.radioIdArray
 surveyBot.radioFill(radios)
+surveyBot.requiredInputFill
+surveyBot.surveySubmit
 
 
 
