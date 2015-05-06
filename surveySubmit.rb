@@ -7,22 +7,9 @@ Capybara.configure do |config|
   config.default_wait_time = 4
 end
 
-module WaitForAjax  # from https://robots.thoughtbot.com/automatically-wait-for-ajax-with-capybara
-  def wait_for_ajax
-    Timeout.timeout(Capybara.default_wait_time) do
-      loop until finished_all_ajax_requests?
-    end
-  end
-
-  def finished_all_ajax_requests?
-    session.evaluate_script('jQuery.active').zero?
-  end
-end
-
 
 
 class SurveyFiller
-	include WaitForAjax  #maybe change include to 'extend'
 
 	attr_accessor :session
 
@@ -36,8 +23,6 @@ class SurveyFiller
 			while !session.first(:css, ".gform_next_button").nil?
 				if session.first(:css, ".gform_next_button")
 					session.find(:css, '.gform_next_button').click
-					# wait_for_ajax
-					# session.execute_script("console.log(jQuery('#choice_1_27_1') )")
 				end
 
 			end
@@ -70,7 +55,7 @@ class SurveyFiller
 
 	def radioFill(radioArray)
 		times = radioArray.length
-		timesToCheck = rand(times/2)
+		timesToCheck = rand(times)
 		timesToCheck.times do |i|
 			@sampledID = radioArray.sample
 			session.execute_script("jQuery('#'+'#{@sampledID}').prop('checked',true); ")
@@ -81,14 +66,20 @@ class SurveyFiller
 	def surveySubmit
 		if session.first(:css, "input[type='submit']")
 			session.find(:css, "input[type='submit']").click
-			sleep 3
+			sleep 2
 		end
 	end
 
 	def inputFill
-		allInputs = session.all(:css, 'input[type="text"]', :visible => false)
+		allInputs = session.all(:css, 'input[type="text"], textarea, select', :visible => false)
 		inputIdArray = allInputs.map {|c| c[:id]}
-
+		times = inputIdArray.length
+		timesToFill = rand(times*2)
+		timesToFill.times do |i|
+			@sampledID = inputIdArray.sample
+			@randomString = (0...8).map { (65 + rand(26)).chr }.join
+			session.execute_script("jQuery('#'+'#{@sampledID}').val('#{@randomString}').attr('value', '#{@randomString}'); ")
+		end
 	end
 	def requiredInputFill
 		requiredInputs = session.all(:css, '.gfield_contains_required input', :visible => false)
@@ -96,13 +87,13 @@ class SurveyFiller
 		inputIdArray.each{|i|
 			@sampledID = i
 			@randomString = (0...8).map { (65 + rand(26)).chr }.join
-			session.execute_script("jQuery('#'+'#{@sampledID}').val('#{@randomString}'); jQuery('#'+'#{@sampledID}').attr('value', '#{@randomString}'); ")
+			session.execute_script("jQuery('#'+'#{@sampledID}').val('#{@randomString}').attr('value', '#{@randomString}'); ")
 		}
+		# fill in email address
 		@randomString = (0...8).map { (65 + rand(26)).chr }.join
-
 		session.execute_script("var emailLabel = jQuery('.gfield_contains_required label').filter(function(){return jQuery(this).text() == 'Email*'});
 								emailid = emailLabel.parent().attr('id');
-								jQuery('#'+emailid+' input').val('#{@randomString}'+'@gmail.com'); jQuery('#'+emailid+' input').attr('value', '#{@randomString}'+'@gmail.com'); ")
+								jQuery('#'+emailid+' input').val('#{@randomString}'+'@MSsurveyBot.com').attr('value', '#{@randomString}'+'@MSsurveyBot.com'); ")
 	end
 
 end
@@ -112,10 +103,15 @@ session = Capybara::Session.new :selenium
 
 surveyBot = SurveyFiller.new(session)
 
+# go to the last page and fill in random checkboxes
 checkboxes = surveyBot.goToLastPage("http://audubon-giftmaker-wpengine-com.giftmaker.staging.wpengine.com/").checkboxIdArray
 surveyBot.checkboxFill(checkboxes)
+# fill in random radio buttons
 radios = surveyBot.radioIdArray
 surveyBot.radioFill(radios)
+# fill in random input fields
+surveyBot.inputFill
+# fill in all required input fields
 surveyBot.requiredInputFill
 surveyBot.surveySubmit
 
