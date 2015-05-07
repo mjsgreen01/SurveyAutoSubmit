@@ -1,6 +1,6 @@
 require "capybara"
 require "capybarista"
-require "JSON"
+#require "JSON"
 
 Capybara.ignore_hidden_elements = true
 Capybara.configure do |config|
@@ -34,6 +34,10 @@ class SurveyFiller
 				rescue
 					puts "goToLastPage method error - most likely nothing to worry about"
 				end
+<<<<<<< HEAD
+=======
+                sleep 2
+>>>>>>> a175de1cf2fa962ca32b9512cf64a90aac7b3b77
 			end
 		rescue
 			puts "goToLastPage method error - most likely nothing to worry about"
