@@ -34,10 +34,7 @@ class SurveyFiller
 				rescue
 					puts "goToLastPage method error - most likely nothing to worry about"
 				end
-<<<<<<< HEAD
-=======
                 sleep 2
->>>>>>> a175de1cf2fa962ca32b9512cf64a90aac7b3b77
 			end
 		rescue
 			puts "goToLastPage method error - most likely nothing to worry about"
