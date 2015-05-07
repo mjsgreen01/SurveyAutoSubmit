@@ -75,7 +75,7 @@ class SurveyFiller
 	def surveySubmit
 		if session.first(:css, "input[type='submit']")
 			session.find(:css, "input[type='submit']").click
-			sleep 2
+			sleep 3
 		end
 	end
 
