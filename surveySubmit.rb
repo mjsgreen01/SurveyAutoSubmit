@@ -108,6 +108,23 @@ class SurveyFiller
 		session.execute_script("var zipLabel = jQuery('label').filter(function(){return jQuery(this).text().toLowerCase().indexOf('zip') >= 0});
 								zipid = zipLabel.parent().attr('id');
 								jQuery('#'+zipid+' input').val('#{@randomString}').attr('value', '#{@randomString}'); ")
+		# select options from country and state dropdowns
+		session.execute_script("var countryLabel = jQuery('label').filter(function(){return jQuery(this).text().toLowerCase().indexOf('country') >= 0});
+								countryLabel.parent().addClass('country')
+								var countryid = countryLabel.parent().attr('id');
+								jQuery('#'+countryid+' select').prop('selectedIndex', 4);
+
+								var stateLabel = jQuery('select').parent().parent().children('label').filter(function(){return jQuery(this).text().toLowerCase().indexOf('state') >= 0});
+								stateLabel.parent().addClass('state')
+								var stateid = stateLabel.parent().attr('id');
+								jQuery('#'+stateid+' select').prop('selectedIndex', 4);")
+		# make sure country and state values are two characters long
+		if session.first(:css, ".country select").value.length != 2
+			puts "warning: the country dropdown option's value is not two characters"
+		end
+		if session.first(:css, ".state select").value.length != 2
+			puts "warning: the state dropdown option's value is not two characters"
+		end
 	end
 
 end
