@@ -58,10 +58,14 @@ class SurveyFiller
 
 				@selectedConsideration = considerationIdArray[i]
 				session.execute_script("jQuery('#'+'#{@selectedConsideration}').prop('checked',true); ")
+				selectedString = session.execute_script("return jQuery('#'+'#{@selectedConsideration}').parent().text()")
+				puts "consideration option selected: #{selectedString}"
 				# first loop of each consideration, select no guides, otherwise choose one randomly
 				if j == 1
 					@selectedGuide = guidesIdArray.sample
 					session.execute_script("jQuery('#'+'#{@selectedGuide}').prop('checked',true); ")
+					selectedString = session.execute_script("return jQuery('#'+'#{@selectedGuide}').parent().text()")
+					puts "guides selected: " + selectedString
 					# if second consideration option is selected, select all guides
 					if i == 1
 						guidesIdArray.each{|g|
