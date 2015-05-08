@@ -52,13 +52,16 @@ class SurveyFiller
 		# find all guides options
 		guidesInputs = session.all(:css, '.guides input', :visible => false)
 		guidesIdArray =  guidesInputs.map {|c| c[:id]}
-		
-		puts "cosnideration options found: #{considerationLength}"
+		# find first daf option
+		dafInputs = session.all(:css, '.daf .gfield_radio li:first-child input', :visible => false)
+		dafIdArray =  dafInputs.map {|c| c[:id]}
+
+		puts "consideration options found: #{considerationLength}"
 		# submit survey twice for each consideration question
 		considerationLength.times do |i|
 			2.times do |j|
 				goToLastPage(url)
-				
+
 				@selectedConsideration = considerationIdArray[i]
 				session.execute_script("jQuery('#'+'#{@selectedConsideration}').prop('checked',true); ")
 				selectedString = session.execute_script("return jQuery('#'+'#{@selectedConsideration}').parent().text()")
@@ -79,11 +82,22 @@ class SurveyFiller
 						end
 					else
 						selectedString = session.execute_script("return jQuery('#'+'#{@selectedGuide}').parent().text()")
-						puts "guides selected: " + selectedString
+						puts "guides selected: #{selectedString}"
 					end
 				else
 					puts "no guides selected"
 				end
+
+				# randomly select yes to daf question
+				if [0, 1].sample == 1
+					dafIdArray.each do |d|
+						@selectedDaf = d
+						session.execute_script("jQuery('#'+'#{@selectedDaf}').prop('checked',true); ")
+						selectedString = session.execute_script("return jQuery('#'+'#{@selectedDaf}').parent().text()")
+						puts "daf option selected: #{selectedString}"
+					end
+				end
+
 				# fill in random input fields
 				inputFill
 				# fill in all required input fields
