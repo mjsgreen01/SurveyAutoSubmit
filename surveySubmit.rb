@@ -28,10 +28,10 @@ class SurveyFiller
 		begin
 			while session.has_css?(".gform_body")
 				begin
-					if session.first(:css, "input[type='submit']")
-						break
-					elsif session.first(:css, ".gform_next_button")
+					if session.first(:css, ".gform_next_button")
 						session.find(:css, '.gform_next_button').click
+					elsif session.first(:css, "input[type='submit']")
+						break
 					end
 				rescue
 					
@@ -84,7 +84,7 @@ class SurveyFiller
 		allInputs = session.all(:css, 'input[type="text"], textarea', :visible => false)
 		inputIdArray = allInputs.map {|c| c[:id]}
 		times = inputIdArray.length
-		timesToFill = rand(times*2)
+		timesToFill = rand(times*2).ceil
 		timesToFill.times do |i|
 			@sampledID = inputIdArray.sample
 			@randomString = (0...8).map { (65 + rand(26)).chr }.join
@@ -106,7 +106,7 @@ class SurveyFiller
 								jQuery('#'+emailid+' input').val('#{@randomString}'+'@MSsurveyBot.com').attr('value', '#{@randomString}'+'@MSsurveyBot.com'); ")
 		# fill in zip code
 		@randomString = (0...5).map { (48 + rand(9)).chr }.join
-		session.execute_script("var zipLabel = jQuery('label').filter(function(){return jQuery(this).text().toLowerCase().indexOf('zip') >= 0});
+		session.execute_script("var zipLabel = jQuery('select').parent().parent().children('label').filter(function(){return jQuery(this).text().toLowerCase().indexOf('zip') >= 0});
 								zipid = zipLabel.parent().attr('id');
 								jQuery('#'+zipid+' input').val('#{@randomString}').attr('value', '#{@randomString}'); ")
 		# select options from country and state dropdowns

@@ -27,14 +27,15 @@ class SurveyFiller
 		begin
 			while session.has_css?(".gform_body")
 				begin
-					if session.first(:css, "input[type='submit']")
-						break
-					elsif session.first(:css, ".gform_next_button")
+					if session.first(:css, ".gform_next_button")
 						session.find(:css, '.gform_next_button').click
+					elsif session.first(:css, "input[type='submit']")
+						break
 					end
 				rescue
 					
 				end
+                # sleep 1
 			end
 		rescue
 			puts "goToLastPage method error - most likely nothing to worry about"
@@ -51,12 +52,13 @@ class SurveyFiller
 		# find all guides options
 		guidesInputs = session.all(:css, '.guides input', :visible => false)
 		guidesIdArray =  guidesInputs.map {|c| c[:id]}
-
+		
+		puts "cosnideration options found: #{considerationLength}"
 		# submit survey twice for each consideration question
 		considerationLength.times do |i|
 			2.times do |j|
 				goToLastPage(url)
-
+				
 				@selectedConsideration = considerationIdArray[i]
 				session.execute_script("jQuery('#'+'#{@selectedConsideration}').prop('checked',true); ")
 				selectedString = session.execute_script("return jQuery('#'+'#{@selectedConsideration}').parent().text()")
@@ -107,7 +109,7 @@ class SurveyFiller
 		allInputs = session.all(:css, 'input[type="text"], textarea', :visible => false)
 		inputIdArray = allInputs.map {|c| c[:id]}
 		times = inputIdArray.length
-		timesToFill = rand(times*2)
+		timesToFill = rand(times*2).ceil
 		timesToFill.times do |i|
 			@sampledID = inputIdArray.sample
 			@randomString = (0...8).map { (65 + rand(26)).chr }.join
@@ -133,7 +135,7 @@ class SurveyFiller
 								zipid = zipLabel.parent().attr('id');
 								jQuery('#'+zipid+' input').val('#{@randomString}').attr('value', '#{@randomString}'); ")
 		# select options from country and state dropdowns
-		session.execute_script("var countryLabel = jQuery('label').filter(function(){return jQuery(this).text().toLowerCase().indexOf('country') >= 0});
+		session.execute_script("var countryLabel = jQuery('select').parent().parent().children('label').filter(function(){return jQuery(this).text().toLowerCase().indexOf('country') >= 0});
 								countryLabel.parent().addClass('country')
 								var countryid = countryLabel.parent().attr('id');
 								jQuery('#'+countryid+' select').prop('selectedIndex', 4);
