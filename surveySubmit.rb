@@ -126,6 +126,17 @@ class SurveyFiller
 		if session.first(:css, ".state select").value.length != 2
 			puts "warning: the state dropdown option's value is not two characters"
 		end
+
+		# find first daf options and randomly select them
+		dafInputs = session.all(:css, '.daf .gfield_radio li:first-child input', :visible => false)
+		dafIdArray =  dafInputs.map {|c| c[:id]}
+		if [0, 1].sample == 1
+			dafIdArray.each do |d|
+				@selectedDaf = d
+				session.execute_script("jQuery('#'+'#{@selectedDaf}').prop('checked',true); ")
+			end
+		end
+
 	end
 
 end
