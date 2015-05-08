@@ -4,7 +4,7 @@ require "capybarista"
 
 Capybara.ignore_hidden_elements = true
 Capybara.configure do |config|
-  config.default_wait_time = 4
+  config.default_wait_time = 2
 end
 
 if ARGV.size < 2
@@ -26,15 +26,16 @@ class SurveyFiller
 	def goToLastPage(url)
 		session.visit url
 		begin
-			while !session.first(:css, ".gform_next_button").nil?
+			while session.has_css?(".gform_body")
 				begin
-					if session.first(:css, ".gform_next_button")
+					if session.first(:css, "input[type='submit']")
+						break
+					elsif session.first(:css, ".gform_next_button")
 						session.find(:css, '.gform_next_button').click
 					end
 				rescue
-					puts "goToLastPage method error - most likely nothing to worry about"
+					
 				end
-                sleep 2
 			end
 		rescue
 			puts "goToLastPage method error - most likely nothing to worry about"

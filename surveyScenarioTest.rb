@@ -4,7 +4,7 @@ require "capybarista"
 
 Capybara.ignore_hidden_elements = true
 Capybara.configure do |config|
-  config.default_wait_time = 4
+  config.default_wait_time = 2
 end
 
 if ARGV.size < 1
@@ -25,15 +25,16 @@ class SurveyFiller
 	def goToLastPage(url)
 		session.visit url
 		begin
-			while !session.first(:css, ".gform_next_button").nil?
+			while session.has_css?(".gform_body")
 				begin
-					if session.first(:css, ".gform_next_button")
+					if session.first(:css, "input[type='submit']")
+						break
+					elsif session.first(:css, ".gform_next_button")
 						session.find(:css, '.gform_next_button').click
 					end
 				rescue
-					puts "goToLastPage method error - most likely nothing to worry about"
+					
 				end
-                sleep 1
 			end
 		rescue
 			puts "goToLastPage method error - most likely nothing to worry about"
@@ -64,18 +65,22 @@ class SurveyFiller
 				if j == 1
 					@selectedGuide = guidesIdArray.sample
 					session.execute_script("jQuery('#'+'#{@selectedGuide}').prop('checked',true); ")
-					selectedString = session.execute_script("return jQuery('#'+'#{@selectedGuide}').parent().text()")
-					puts "guides selected: " + selectedString
+					
 					# if second consideration option is selected, select all guides
 					if i == 1
-						guidesIdArray.each{|g|
+						puts "guides selected: " 
+						guidesIdArray.each do |g|
 							@selectedGuide = g
 							session.execute_script("jQuery('#'+'#{@selectedGuide}').prop('checked',true); ")
-						}
+							selectedString = session.execute_script("return jQuery('#'+'#{@selectedGuide}').parent().text()")
+							puts selectedString
+						end
+					else
+						selectedString = session.execute_script("return jQuery('#'+'#{@selectedGuide}').parent().text()")
+						puts "guides selected: " + selectedString
 					end
-					puts "second loop"
 				else
-					puts "first loop"
+					puts "no guides selected"
 				end
 				# fill in random input fields
 				inputFill
