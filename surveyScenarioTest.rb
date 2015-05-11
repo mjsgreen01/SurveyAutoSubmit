@@ -170,12 +170,17 @@ class SurveyFiller
 								stateLabel.parent().addClass('state')
 								var stateid = stateLabel.parent().attr('id');
 								jQuery('#'+stateid+' select').prop('selectedIndex', 4);")
+		
 		# make sure country and state values are two characters long
-		if session.first(:css, ".country select").value.length != 2
-			puts "warning: the country dropdown option's value is not two characters"
+		if session.first(:css, ".country select")
+			if session.first(:css, ".country select").value.length != 2
+				puts "warning: the country dropdown option's value is not two characters"
+			end
 		end
-		if session.first(:css, ".state select").value.length != 2
-			puts "warning: the state dropdown option's value is not two characters"
+		if session.first(:css, ".state select")
+			if session.first(:css, ".state select").value.length != 2
+				puts "warning: the state dropdown option's value is not two characters"
+			end
 		end
 	end
 
