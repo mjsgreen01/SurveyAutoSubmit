@@ -53,7 +53,7 @@ class SurveyFiller
 		# find all guides options - guides question must have class 'guides'
 		guidesInputs = session.all(:css, '.guides input', :visible => false)
 		guidesIdArray =  guidesInputs.map {|c| c[:id]}
-		
+
 		# find first daf option - daf question must have class 'daf'
 		dafInputs = session.all(:css, '.daf .gfield_radio li:first-child input', :visible => false)
 		dafIdArray =  dafInputs.map {|c| c[:id]}
@@ -111,6 +111,12 @@ class SurveyFiller
 				surveySubmit
 			end
 		end
+
+		# leave consideration blank to test 'default' thank-you message
+		goToLastPage(url)
+		puts "no consideration/guides/daf options selected"
+		requiredInputFill
+		surveySubmit
 	end
 	
 
@@ -121,6 +127,7 @@ class SurveyFiller
 			sleep 3
 		end
 		puts "press ENTER to continue"
+		puts "____________________________________________________________________________________________"
 		$stdin.gets
 	end
 
