@@ -25,7 +25,7 @@ class SurveyFiller
 	def goToLastPage(url)
 		session.visit url
 		begin
-			while session.has_css?(".gform_body")
+			while session.has_css?(".gform_body") # waits for ajax to finish
 				begin
 					if session.first(:css, ".gform_next_button")
 						session.find(:css, '.gform_next_button').click
@@ -35,7 +35,6 @@ class SurveyFiller
 				rescue
 					
 				end
-                # sleep 1
 			end
 		rescue
 			puts "goToLastPage method error - most likely nothing to worry about"
@@ -45,33 +44,39 @@ class SurveyFiller
 
 	def considerationTest(url)
 		session.visit url
-		# find all consideration options
+
+		# find all consideration options - consideration question must have class 'consideration'
 		considerationInputs = session.all(:css, '.consideration input', :visible => false)
 		considerationIdArray =  considerationInputs.map {|c| c[:id]}
 		considerationLength = considerationIdArray.length
-		# find all guides options
+
+		# find all guides options - guides question must have class 'guides'
 		guidesInputs = session.all(:css, '.guides input', :visible => false)
 		guidesIdArray =  guidesInputs.map {|c| c[:id]}
-		# find first daf option
+		
+		# find first daf option - daf question must have class 'daf'
 		dafInputs = session.all(:css, '.daf .gfield_radio li:first-child input', :visible => false)
 		dafIdArray =  dafInputs.map {|c| c[:id]}
 
 		puts "consideration options found: #{considerationLength}"
+
 		# submit survey twice for each consideration question
 		considerationLength.times do |i|
 			2.times do |j|
 				goToLastPage(url)
 
+				# select a consideration option
 				@selectedConsideration = considerationIdArray[i]
 				session.execute_script("jQuery('#'+'#{@selectedConsideration}').prop('checked',true); ")
 				selectedString = session.execute_script("return jQuery('#'+'#{@selectedConsideration}').parent().text()")
 				puts "consideration option selected: #{selectedString}"
-				# first loop of each consideration, select no guides, otherwise choose one randomly
+
+				# first loop of each consideration option, select no guides, otherwise choose one randomly
 				if j == 1
 					@selectedGuide = guidesIdArray.sample
 					session.execute_script("jQuery('#'+'#{@selectedGuide}').prop('checked',true); ")
 					
-					# if second consideration option is selected, select all guides
+					# if second consideration option is selected, select ALL guides
 					if i == 1
 						puts "guides selected: " 
 						guidesIdArray.each do |g|
@@ -88,7 +93,7 @@ class SurveyFiller
 					puts "no guides selected"
 				end
 
-				# randomly select yes to daf question
+				# randomly select the first option of the daf questions
 				if [0, 1].sample == 1
 					dafIdArray.each do |d|
 						@selectedDaf = d

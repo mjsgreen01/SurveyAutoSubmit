@@ -26,7 +26,7 @@ class SurveyFiller
 	def goToLastPage(url)
 		session.visit url
 		begin
-			while session.has_css?(".gform_body")
+			while session.has_css?(".gform_body") # waits for ajax to finish
 				begin
 					if session.first(:css, ".gform_next_button")
 						session.find(:css, '.gform_next_button').click
@@ -51,7 +51,7 @@ class SurveyFiller
 	def checkboxFill(checkboxArray)
 		times = checkboxArray.length
 		timesToCheck = rand(times*2)
-		timesToCheck.times do |i|
+		timesToCheck.times do |i| # loop a random number of times, selecting a random checkbox each time
 			@sampledID = checkboxArray.sample
 			session.execute_script("jQuery('#'+'#{@sampledID}').prop('checked',true); ")
 		end
@@ -65,7 +65,7 @@ class SurveyFiller
 
 	def radioFill(radioArray)
 		times = radioArray.length
-		timesToCheck = rand(times)
+		timesToCheck = rand(times) # loop a random number of times, selecting a random radio button each time
 		timesToCheck.times do |i|
 			@sampledID = radioArray.sample
 			session.execute_script("jQuery('#'+'#{@sampledID}').prop('checked',true); ")
@@ -85,16 +85,16 @@ class SurveyFiller
 		inputIdArray = allInputs.map {|c| c[:id]}
 		times = inputIdArray.length
 		timesToFill = rand(times*2).ceil
-		timesToFill.times do |i|
+		timesToFill.times do |i| # loop a random number of times, filling in a random text input each time
 			@sampledID = inputIdArray.sample
-			@randomString = (0...8).map { (65 + rand(26)).chr }.join
+			@randomString = (0...8).map { (65 + rand(26)).chr }.join # generates a random string
 			session.execute_script("jQuery('#'+'#{@sampledID}').val('#{@randomString}').attr('value', '#{@randomString}'); ")
 		end
 	end
 	def requiredInputFill
 		requiredInputs = session.all(:css, '.gfield_contains_required input', :visible => false)
 		inputIdArray = requiredInputs.map {|c| c[:id]}
-		inputIdArray.each{|i|
+		inputIdArray.each{|i| # fill in all required inputs
 			@sampledID = i
 			@randomString = (0...8).map { (65 + rand(26)).chr }.join
 			session.execute_script("jQuery('#'+'#{@sampledID}').val('#{@randomString}').attr('value', '#{@randomString}'); ")
@@ -125,16 +125,6 @@ class SurveyFiller
 		end
 		if session.first(:css, ".state select").value.length != 2
 			puts "warning: the state dropdown option's value is not two characters"
-		end
-
-		# find first daf options and randomly select them
-		dafInputs = session.all(:css, '.daf .gfield_radio li:first-child input', :visible => false)
-		dafIdArray =  dafInputs.map {|c| c[:id]}
-		if [0, 1].sample == 1
-			dafIdArray.each do |d|
-				@selectedDaf = d
-				session.execute_script("jQuery('#'+'#{@selectedDaf}').prop('checked',true); ")
-			end
 		end
 
 	end
