@@ -25,10 +25,12 @@ class SurveyFiller
 
 	def goToLastPage(url)
 		session.visit url
+		@pages = 1
 		begin
 			while session.has_css?(".gform_body") # waits for ajax to finish
 				begin
 					if session.first(:css, ".gform_next_button")
+						@pages += 1
 						session.find(:css, '.gform_next_button').click
 					elsif session.first(:css, "input[type='submit']")
 						break
@@ -75,8 +77,16 @@ class SurveyFiller
 
 	def surveySubmit
 		if session.first(:css, "input[type='submit']")
+			if @pages <= 2
+				sleep 5
+			end
 			session.find(:css, "input[type='submit']").click
-			sleep 3
+			if @pages > 2
+				sleep 3
+			else # if fewer than 2 pages, give the form extra time to send email
+				sleep 7
+				# session.driver.browser.close
+			end
 		end
 	end
 
@@ -92,7 +102,7 @@ class SurveyFiller
 		end
 	end
 	def requiredInputFill
-		requiredInputs = session.all(:css, '.gfield_contains_required input', :visible => false)
+		requiredInputs = session.all(:css, '.gfield_contains_required input[type="text"]', :visible => false)
 		inputIdArray = requiredInputs.map {|c| c[:id]}
 		inputIdArray.each{|i| # fill in all required inputs
 			@sampledID = i
@@ -106,11 +116,11 @@ class SurveyFiller
 								jQuery('#'+emailid+' input').val('#{@randomString}'+'@MSsurveyBot.com').attr('value', '#{@randomString}'+'@MSsurveyBot.com'); ")
 		# fill in zip code
 		@randomString = (0...5).map { (48 + rand(9)).chr }.join
-		session.execute_script("var zipLabel = jQuery('select').parent().parent().children('label').filter(function(){return jQuery(this).text().toLowerCase().indexOf('zip') >= 0});
+		session.execute_script("var zipLabel = jQuery('label').filter(function(){return jQuery(this).text().toLowerCase().indexOf('zip') >= 0});
 								zipid = zipLabel.parent().attr('id');
 								jQuery('#'+zipid+' input').val('#{@randomString}').attr('value', '#{@randomString}'); ")
 		# select options from country and state dropdowns
-		session.execute_script("var countryLabel = jQuery('label').filter(function(){return jQuery(this).text().toLowerCase().indexOf('country') >= 0});
+		session.execute_script("var countryLabel = jQuery('select').parent().parent().children('label').filter(function(){return jQuery(this).text().toLowerCase().indexOf('country') >= 0});
 								countryLabel.parent().addClass('country')
 								var countryid = countryLabel.parent().attr('id');
 								jQuery('#'+countryid+' select').prop('selectedIndex', 4);
@@ -134,13 +144,13 @@ class SurveyFiller
 	end
 
 end
-
-
 session = Capybara::Session.new :selenium
 
 surveyBot = SurveyFiller.new(session)
-
 numberTests.times do
+
+
+
 	# go to the last page and fill in random checkboxes
 	checkboxes = surveyBot.goToLastPage(surveyUrl).checkboxIdArray
 	surveyBot.checkboxFill(checkboxes)
