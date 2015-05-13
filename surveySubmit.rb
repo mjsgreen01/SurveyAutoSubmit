@@ -78,13 +78,13 @@ class SurveyFiller
 	def surveySubmit
 		if session.first(:css, "input[type='submit']")
 			if @pages <= 2
-				sleep 5
+				sleep 3
 			end
 			session.find(:css, "input[type='submit']").click
 			if @pages > 2
 				sleep 3
 			else # if fewer than 2 pages, give the form extra time to send email
-				sleep 7
+				sleep 5
 				# session.driver.browser.close
 			end
 		end
@@ -109,9 +109,28 @@ class SurveyFiller
 			@randomString = (0...8).map { (65 + rand(26)).chr }.join
 			session.execute_script("jQuery('#'+'#{@sampledID}').val('#{@randomString}').attr('value', '#{@randomString}'); ")
 		}
+		# handle required checkbox questions
+		requiredCheckboxUl = session.all(:css, '.gfield_contains_required .gfield_checkbox', :visible => false)
+		requiredCheckboxIdArray = requiredCheckboxUl.map {|c| c[:id]}
+		requiredCheckboxIdArray.each{|i|
+			requiredCheckboxInputs = session.all(:css, '#' + i + ' input', :visible => false)
+			requiredCheckboxInputsIds = requiredCheckboxInputs.map {|c| c[:id]}
+			@sampledID = requiredCheckboxInputsIds.sample
+			session.execute_script("jQuery('#'+'#{@sampledID}').prop('checked',true); ")
+		}
+		# handle required radio-button questions
+		requiredRadioUl = session.all(:css, '.gfield_contains_required .gfield_radio', :visible => false)
+		requiredRadioIdArray = requiredRadioUl.map {|c| c[:id]}
+		requiredRadioIdArray.each{|i|
+			requiredRadioInputs = session.all(:css, '#' + i + ' input', :visible => false)
+			requiredRadioInputsIds = requiredRadioInputs.map {|c| c[:id]}
+			@sampledID = requiredRadioInputsIds.sample
+			session.execute_script("jQuery('#'+'#{@sampledID}').prop('checked',true); ")
+		}
+
 		# fill in email address
 		@randomString = (0...8).map { (65 + rand(26)).chr }.join
-		session.execute_script("var emailLabel = jQuery('.gfield_contains_required label').filter(function(){return jQuery(this).text().toLowerCase().indexOf('email') >= 0});
+		session.execute_script("var emailLabel = jQuery('.gfield_contains_required input').parent().parent().children('label').filter(function(){return jQuery(this).text().toLowerCase().indexOf('email') >= 0});
 								emailid = emailLabel.parent().attr('id');
 								jQuery('#'+emailid+' input').val('#{@randomString}'+'@MSsurveyBot.com').attr('value', '#{@randomString}'+'@MSsurveyBot.com'); ")
 		# fill in zip code
